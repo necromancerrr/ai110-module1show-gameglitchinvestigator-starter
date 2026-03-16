@@ -54,15 +54,18 @@ Because `new_game` resets `st.session_state` directly in `app.py`, it can't easi
 
 ## 4. What did you learn about Streamlit and state?
 
-- In your own words, explain why the secret number kept changing in the original app.
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
-- What change did you make that finally gave the game a stable secret number?
+In the original app, the secret number kept changing because every time the user clicked "Submit", Streamlit re-ran the entire `app.py` script from top to bottom. The line `secret = random.randint(low, high)` was at the top level with no guard, so it picked a brand-new number on every rerun — making it impossible to actually guess the right answer.
+
+Streamlit "reruns" are like hitting refresh on the whole script — every button click, every input change causes the file to execute again from line 1. `st.session_state` is a dictionary that survives across those reruns, like a sticky note that doesn't get erased. So instead of calling `random.randint()` every time, we check `if "secret" not in st.session_state` first and only generate a new number when the game genuinely hasn't started yet.
+
+The fix that gave the game a stable secret number was wrapping the `randint` call in that `if "secret" not in st.session_state:` guard. Once the key exists in session state, Streamlit skips the line on every subsequent rerun and keeps the same value for the lifetime of the game.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+**Habit I want to keep:** Writing regression tests the moment I fix a bug. For Bug 1 I immediately wrote `test_hint_direction_too_high` so that if the hint logic ever gets accidentally reversed again, the test will catch it automatically. This is much more reliable than remembering to manually re-test every edge case by hand.
+
+**What I'd do differently:** Before accepting any AI suggestion that touches a function's return type or signature, I'd run the existing tests *first* to create a baseline, then re-run them after the change. I assumed the AI's refactoring suggestion was safe until pytest showed me the tuple-vs-string mismatch — a quick "run tests first" habit would have caught that faster.
+
+**How this project changed my thinking:** AI-generated code looks confident and complete even when it has subtle logical errors baked in, so reading it the same way I'd read my own first draft — skeptically and with tests — is the right default. The AI is a fast first draft, not a finished product.

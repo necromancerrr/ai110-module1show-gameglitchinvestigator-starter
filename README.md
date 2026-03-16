@@ -25,13 +25,28 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+**Game purpose:** A number-guessing game where the player tries to identify a secret number within a limited number of attempts. The difficulty setting controls the range and attempt limit.
+
+**Bugs found:**
+1. **Backwards hints** — `check_guess` returned "Go HIGHER!" when the guess was too high and "Go LOWER!" when it was too low, actively misleading the player on every guess.
+2. **Hard mode easier than Normal** — `get_range_for_difficulty` returned `1–50` for Hard but `1–100` for Normal, inverting the difficulty curve.
+3. **New Game didn't fully reset** — Clicking "New Game" only reset `attempts` and `secret`. The `status`, `history`, and `score` carried over, making the game immediately unplayable after a win or loss.
+4. **New Game ignored difficulty** — The new-game block hardcoded `random.randint(1, 100)` instead of calling `get_range_for_difficulty()`, so difficulty had no effect on subsequent games.
+
+**Fixes applied:**
+- Moved all game logic (`check_guess`, `parse_guess`, `get_range_for_difficulty`, `update_score`) from `app.py` into `logic_utils.py`.
+- Fixed the hint direction in `check_guess` — `guess > secret` now correctly returns `"Too High"` paired with "Go LOWER!".
+- Fixed the New Game block to reset all five session state fields: `attempts`, `secret`, `status`, `history`, and `score`.
+- Fixed the New Game block to use `random.randint(low, high)` derived from the selected difficulty.
+- Added 6 new pytest tests in `tests/test_game_logic.py` covering hint direction, input parsing, and difficulty ranges. All 9 tests pass.
 
 ## 📸 Demo
 
-- [ ] [Insert a screenshot of your fixed, winning game here]
+**pytest — all 9 tests passing:**
+[pytest results](image.png)
+
+**Fixed game (winning run):**
+[Fixed winning game](winning_game.png)
 
 ## 🚀 Stretch Features
 
