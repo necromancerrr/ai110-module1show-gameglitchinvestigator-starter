@@ -28,18 +28,27 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+I used Claude (Claude Code) as my primary AI tool throughout this project.
+
+**Correct suggestion — Bug 1 (backwards hints):**
+I asked the AI to look at `check_guess` in `app.py` and explain what was wrong. It immediately identified that the return values were swapped: when `guess > secret` the code returned `"📈 Go HIGHER!"` instead of `"📉 Go LOWER!"`. It suggested reversing the two message strings. I verified this was correct by writing a regression test (`test_hint_direction_too_high`) that asserts `check_guess(80, 50) == "Too High"` and running `pytest` — the test passed. I also manually played the game and confirmed hints now point in the right direction.
+
+**Incorrect/misleading suggestion — refactoring `check_guess` return value:**
+When moving `check_guess` into `logic_utils.py`, the AI initially suggested keeping the original return signature of `(outcome, message)` tuple so app.py wouldn't need changes. However, the existing starter tests (`test_guess_too_high`, etc.) compare the result directly to a string like `"Too High"`, which means a tuple return would cause all three tests to fail. I caught this by running `pytest` before accepting the suggestion — tests failed — so I changed `check_guess` to return only the outcome string and handled the display message in `app.py` with a `HINT_MESSAGES` dictionary instead.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
+**How I decided a bug was really fixed:** I required two things to be true at the same time — `pytest` had to pass *and* the live game had to behave correctly in the browser. Passing tests alone weren't enough because the tests don't cover the Streamlit UI state.
+
+**Test I ran — Bug 1 regression:**
+I added `test_hint_direction_too_high` and `test_hint_direction_too_low` to `tests/test_game_logic.py`. Before the fix, those same assertions would have failed because the old logic returned `"Too Low"` when guess > secret. After the fix, both tests passed in `pytest`. This confirmed the hint direction was correct at the logic level without needing to click through the UI every time.
+
+**Test I ran — New Game reset (Bug 3):**
+Because `new_game` resets `st.session_state` directly in `app.py`, it can't easily be unit-tested. Instead I tested it manually: I played a full game to a win, watched `status` become `"won"`, then clicked "New Game". Before the fix the game immediately showed "You already won" and stopped. After adding the `status = "playing"`, `history = []`, and `score = 0` resets, clicking "New Game" cleared the board and started a fresh round.
+
+**AI help with tests:** The AI suggested the specific test names and assertion patterns for the hint-direction regression tests. I reviewed each one to make sure the inputs (e.g., guess=80, secret=50) clearly demonstrated the before/after behavior of the bug, then accepted them.
 
 ---
 
